@@ -1,0 +1,16 @@
+version: '3'
+services:
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    command: sh -c "node index.js"
+    depends_on: 
+      - redis
+
+  redis:
+    image: redis:alpine
+    expose:
+      - 6379

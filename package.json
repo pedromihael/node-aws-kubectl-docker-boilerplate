@@ -1,0 +1,31 @@
+{
+  "name": "redis-pubsub-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://a87bbd7efbbaf0ced799851b4d6256b6f270a950@github.com/pedromihael/redis-pubsub-nodejs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pedromihael/redis-pubsub-nodejs/issues"
+  },
+  "homepage": "https://github.com/pedromihael/redis-pubsub-nodejs#readme",
+  "dependencies": {
+    "eslint-config-airbnb-base": "^14.2.1",
+    "redis": "^3.1.2",
+    "yaml": "^1.10.2"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-plugin-import": "^2.24.2",
+    "nodemon": "^2.0.12",
+    "prettier": "^2.4.1"
+  }
+}
