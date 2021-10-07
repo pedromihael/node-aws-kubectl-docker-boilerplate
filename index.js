@@ -7,36 +7,39 @@ const redisPublisher = redis.createClient();
 
 const exec = util.promisify(require('child_process').exec);
 
-async function catAndUpdateIngress(client) {
+async function catAndUpdateIngress(client, environment) {
   try {
-    // const { stdout, stderr } = await exec('kubectl get ing -oyaml dial-adm-plus-prod');
-    const { stdout, stderr } = await exec('cat ing.yaml');
+    // const { stdout, stderr } = await exec(`kubectl get ing -oyaml dial-adm-plus-${environment}`);
+
+    const { stdout, stderr } = await exec(`cat dev_assets/ing.${environment}.yaml`); // dev
 
     if (stdout) {
       const parsedYAML = YAML.parse(stdout);
       const parsedAnnotations = YAML.parse(
         parsedYAML.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'],
       );
-      const newHost = { ...parsedAnnotations.spec.rules[0], host: `${client}.dialog.cm` };
 
-      parsedAnnotations.spec.rules.push(newHost);
-      parsedAnnotations.spec.tls[0].hosts.push(`${client}.dialog.cm`);
+      const newHost = {
+        ...parsedAnnotations.spec.rules[0],
+        host: `${client}.dialog.${environment}`,
+      };
 
-      // TODO: fix
-      // - & a2
-      // host: vanessa2.dialog.cm
-      // http: *a1
+      const YAMLNode = YAML.createNode(newHost);
+
+      parsedAnnotations.spec.rules.push(YAMLNode);
+
+      environment === 'prod' && parsedAnnotations.spec.tls[0].hosts.push(`${client}.dialog.cm`);
+
+      const YAMLAnnotations = new YAML.Document(parsedAnnotations);
+      const json = JSON.stringify(YAML.parse(YAMLAnnotations), null, '  ');
 
       Object.assign(parsedYAML.metadata.annotations, {
-        'kubectl.kubernetes.io/last-applied-configuration': parsedAnnotations,
+        'kubectl.kubernetes.io/last-applied-configuration': json,
       });
 
-      // console.log(parsedYAML.spec.rules);
+      parsedYAML.spec.rules.push(YAMLNode);
 
-      parsedYAML.spec.rules.push(newHost);
-      parsedYAML.spec.tls[0].hosts.push(`${client}.dialog.cm`);
-
-      // console.log(parsedYAML.spec.tls[0]);
+      environment === 'prod' && parsedYAML.spec.tls[0].hosts.push(`${client}.dialog.cm`); //só em prod
 
       return parsedYAML;
     }
@@ -47,27 +50,18 @@ async function catAndUpdateIngress(client) {
   }
 }
 
-async function applyUpdatedIngress(updatedIngress) {
+async function applyUpdatedIngress(updatedIngress, environment) {
   try {
-    const updatedIngressYAML = YAML.stringify(updatedIngress);
-
-    console.log('YAML', updatedIngressYAML);
-
-    // const { stdout, stderr } = await exec(
-    //   `touch dial-adm-plus.prod.yaml | echo ${updatedIngressYAML} > dial-adm-plus.prod.yaml | kubectl apply -f dial-dm-plus.prod.yaml`,
-    // );
+    const YAMLDoc = new YAML.Document();
+    YAMLDoc.contents = updatedIngress;
 
     const { stdout, stderr } = await exec(
-      `touch dial-adm-plus.prod.yaml | echo ${updatedIngressYAML} > dial-adm-plus.prod.yaml`,
+      `touch dev_assets/dial-adm-plus.${environment}.yaml | echo "${YAMLDoc.toString()}" | dd of=dev_assets/dial-adm-plus.${environment}.yaml`,
     );
 
     if (stdout) {
       // TODO: check k8s output and then publish ok to channel
     }
-
-    const { stdout: catout } = await exec(`cat dial-adm-plus.prod.yaml`);
-
-    // console.log('stdout', catout);
   } catch (err) {
     console.error('Error on apply updated ingress yaml file: ', err);
   }
@@ -75,19 +69,25 @@ async function applyUpdatedIngress(updatedIngress) {
 
 redisSubscriber.subscribe('plusAccountCreation');
 
-redisSubscriber.on('message', async (channel, message) => {
-  if (channel === 'plusAccountCreation') {
-    console.log(`New plus account: ${message}`);
+// redisSubscriber.on('message', async (channel, message) => {
+// if (channel === 'plusAccountCreation') {
+// const splited = message.split(':');
+// const client = splited[0];
+// const environment = splited[1];
 
-    const updatedIngress = await catAndUpdateIngress(message);
-    await applyUpdatedIngress(updatedIngress);
+const client = 'teste';
+const environment = 'qa';
 
-    // TODO: fix not writing
+console.log(`New plus account: ${client} in ${environment}`);
 
-    const confirmattionMessage = 'Ingress updated and changes applied';
-
-    redisPublisher.publish('plusAccountCreationResult', confirmattionMessage, () => {
-      console.log(`Message sent to plusAccountCreationResult: ${confirmattionMessage}`);
-    });
-  }
+catAndUpdateIngress(client, environment).then((updated) => {
+  applyUpdatedIngress(updated, environment);
 });
+
+const confirmattionMessage = 'Ingress updated and changes applied';
+
+// redisPublisher.publish('plusAccountCreationResult', confirmattionMessage, () => {
+//   console.log(`Message sent to plusAccountCreationResult: ${confirmattionMessage}`);
+// });
+// }
+// });
