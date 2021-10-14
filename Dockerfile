@@ -4,7 +4,7 @@ FROM node:14-alpine
 WORKDIR /usr/app
 
 # Copiando o package json e yarn lock para poder instalar as dependencias
-COPY package*.json ./
+COPY package.json ./
 COPY yarn.lock ./
 RUN yarn install
 

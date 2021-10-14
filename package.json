@@ -20,8 +20,8 @@
   "homepage": "https://github.com/pedromihael/redis-pubsub-nodejs#readme",
   "dependencies": {
     "eslint-config-airbnb-base": "^14.2.1",
-    "redis": "^3.1.2",
-    "yaml": "^1.10.2"
+    "js-yaml": "^4.1.0",
+    "redis": "^3.1.2"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
