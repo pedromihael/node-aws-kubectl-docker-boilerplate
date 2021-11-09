@@ -1,16 +1,20 @@
 version: '3'
 services:
-  api:
+  automatization:
     build: 
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "3333:3333"
     command: sh -c "node index.js"
+    network_mode: host
     depends_on: 
       - redis
-
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+    
   redis:
-    image: redis:alpine
-    expose:
-      - 6379
+    image: redis
+    command: redis-server
+    ports:
+      - "6379:6379"

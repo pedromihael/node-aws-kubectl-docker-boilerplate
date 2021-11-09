@@ -237,7 +237,7 @@ spec:
               serviceName: dial-adm-plus-qa-service
               servicePort: 443
             pathType: ImplementationSpecific
-    - host: hoteis-othon.dialog.qa
+    - host: teste3.dialog.qa
       http:
         paths:
           - backend:
