@@ -1,0 +1,30 @@
+version: '3'
+services:
+  automation:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "node index.js"
+    depends_on: 
+      - kubectl
+      - aws
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+    networks:
+      - app-network
+    
+  kubectl:
+    image: kubectl:latest
+    networks:
+      - app-network
+  
+  aws:
+    image: aws-cli:latest
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

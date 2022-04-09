@@ -1,0 +1,11 @@
+{
+  "name": "v2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.3",
+    "js-yaml": "^4.1.0",
+    "redis": "^4.0.6"
+  }
+}
