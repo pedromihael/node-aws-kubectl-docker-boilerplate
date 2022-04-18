@@ -7,6 +7,9 @@ async function catAndUpdateIngress(client, environment) {
   console.log(environment);
 
   try {
+
+    await exec('mkdir ~/ingresses')
+
     const { stdout, stderr } = await exec(
       `kubectl get ing -oyaml dial-adm-plus-${environment} > ~/ingresses/ing.${environment}.yaml`,
     );
