@@ -1,21 +1,23 @@
 const util = require('util');
 const YAML = require('js-yaml');
+const mkdirp = require('mkdirp')
+const path = require('path')
+const fs = require('fs')
 
 const exec = util.promisify(require('child_process').exec);
 
 async function catAndUpdateIngress(client, environment) {
-  console.log(environment);
-
   try {
+    await mkdirp(path.join(__dirname, '/ingresses'))
 
-    await exec('mkdir ~/ingresses')
-
-    const { stdout, stderr } = await exec(
-      `kubectl get ing -oyaml dial-adm-plus-${environment} > ~/ingresses/ing.${environment}.yaml`,
+    await exec(
+      `kubectl get ing -oyaml dial-adm-plus-${environment} > ${__dirname}/ingresses/ing.${environment}.yaml`,
     );
 
-    if (stdout) {
-      const parsedYAML = YAML.load(stdout);
+    const ing = fs.readFileSync(path.join(__dirname, `/ingresses/ing.${environment}.yaml`), 'utf-8')
+
+    if (ing) {
+      const parsedYAML = YAML.load(ing);
 
       const stringAnnotations = parsedYAML.metadata.annotations['kubectl.kubernetes.io/last-applied-configuration'];
 
@@ -33,8 +35,6 @@ async function catAndUpdateIngress(client, environment) {
 
       return YAML.dump(parsedYAML);
     }
-
-    stderr && console.log('stderr:', stderr);
   } catch (err) {
     console.error('Error on cat and format ingress yaml file: ', err);
   }

@@ -1,33 +1,32 @@
 const util = require('util');
 const fs = require('fs');
 const exec = util.promisify(require('child_process').exec);
+const path = require('path');
 
 async function applyUpdatedIngress(updatedIngress, environment) {
   try {
     const { stdout: stdoutCreation, stderr: stderrCreation } = await exec(
-      `touch ~/ingresses/dial-adm-plus.${environment}.yaml`,
+      `touch ${path.join(__dirname, `/ingresses/dial-adm-plus.${environment}.yaml`)}`,
     );
 
     if (!stderrCreation) {
-      fs.writeFile(`~/ingresses/dial-adm-plus.${environment}.yaml`, updatedIngress, (err) => {
+      fs.writeFileSync(`${path.join(__dirname, `/ingresses/dial-adm-plus.${environment}.yaml`)}`, updatedIngress, (err) => {
         console.log(err);
       });
   
-      const { stdout: stdoutApply, stderr: stderrApply } = await exec(
-        `kubectl apply -f ~/ingresses/dial-adm-plus.${environment}.yaml`,
+      const apply = await exec(
+        `kubectl apply -f ${path.join(__dirname, `/ingresses/dial-adm-plus.${environment}.yaml`)}`,
       );
       
-      if (stdoutApply) {
-        const splited = stdoutApply.split(' ');
+      if (apply.stdout) {
+        const splited = apply.stdout.split(' ');
   
-        if (splited[splited.length - 1] === 'configured') {
+        if (splited[splited.length - 1] === 'configured\n') {
           const confirmattionMessage = 'Ingress updated and changes applied';
           console.log(`${confirmattionMessage}`);
         }
       } else {
-        if (stderrApply) {
-          console.log('error on apply ingress:', stderrApply);
-        }
+        console.log('error on apply ingress:', apply.stderr);
       }
     } else {
       console.log(stderrCreation)
