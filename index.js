@@ -3,18 +3,21 @@ const util = require('util');
 const YAML = require('js-yaml');
 const fs = require('fs');
 
-const redisSubscriber = redis.createClient();
-const redisPublisher = redis.createClient();
+// const redisSubscriber = redis.createClient();
 
 const exec = util.promisify(require('child_process').exec);
 
 async function catAndUpdateIngress(client, environment) {
-  try {
-    // const { stdout, stderr } = await exec(`cat dev_assets/ing.${environment}.yaml`); // dev
+  console.log(environment);
 
-    const { stdout, stderr } = await exec(
-      `kubectl get ing -oyaml ~/dev/ingresses/dial-adm-plus-${environment}`,
-    );
+  try {
+    const { stdout, stderr } = await exec(`cat dev_assets/ing.${environment}.yaml`); // dev
+
+    // const { stdoutk8s, stderrk8s } = await exec(
+    //   `kubectl get ing -oyaml dial-adm-plus-${environment} > ~/pedro/ing.${environment}.yaml`,
+    // );
+
+    // const { stdout, stderr } = await exec(`cat ~/pedro/ing.${environment}.yaml`);
 
     if (stdout) {
       const parsedYAML = YAML.load(stdout);
@@ -44,46 +47,45 @@ async function catAndUpdateIngress(client, environment) {
 
 async function applyUpdatedIngress(updatedIngress, environment) {
   try {
-    // const { stdoutCreation, stderrCreation } = await exec(
-    //   `touch ./dev_assets/dial-adm-plus.${environment}.yaml`,
-    // );
-
-    // fs.writeFile(`./dev_assets/dial-adm-plus.${environment}.yaml`, updatedIngress, (err) => {
-    //   console.log(err);
-    // });
-
     const { stdoutCreation, stderrCreation } = await exec(
-      `touch ~/dev/ingresses/dial-adm-plus.${environment}.yaml`,
+      `touch ./dev_assets/dial-adm-plus.${environment}.yaml`,
     );
 
-    fs.writeFile(`~/dev/ingresses/dial-adm-plus.${environment}.yaml`, updatedIngress, (err) => {
+    fs.writeFile(`./dev_assets/dial-adm-plus.${environment}.yaml`, updatedIngress, (err) => {
       console.log(err);
     });
 
-    const { stdoutApply, stderrApply } = await exec(
-      `kubectl apply -f ~/dev/ingresses/dial-adm-plus.${environment}.yaml`,
-    );
+    // const { stdoutCreation, stderrCreation } = await exec(
+    //   `touch ~/ingresses/dial-adm-plus.${environment}.yaml`,
+    // );
+
+    // if (stderrCreation) {
+    //   console.log(stderrCreation);
+    // }
+
+    // fs.writeFile(`~/ingresses/dial-adm-plus.${environment}.yaml`, updatedIngress, (err) => {
+    //   console.log(err);
+    // });
+
+    // const { stdoutApply, stderrApply } = await exec(
+    //   `kubectl apply -f ~/ingresses/dial-adm-plus.${environment}.yaml`,
+    // );
+
+    const stdoutApply = true;
 
     if (stdoutApply) {
-      const splited = stdoutApply.split(' ');
-      // const splited = ['configured'];
+      // const splited = stdoutApply.split(' ');
+      const splited = ['configured'];
 
       if (splited[splited.length - 1] === 'configured') {
         const confirmattionMessage = 'Ingress updated and changes applied';
-
-        redisPublisher.publish('plusAccountCreationResult', confirmattionMessage, () => {
-          console.log(`Message sent to plusAccountCreationResult: ${confirmattionMessage}`);
-        });
-      } else {
-        redisPublisher.publish('plusAccountCreationResult', 'stdoutApply', () => {
-          console.log(`Message sent to plusAccountCreationResult: ${'stdoutApply'}`);
-        });
+        console.log(`${confirmattionMessage}`);
       }
     }
 
-    if (stderrApply) {
-      console.log('error on apply ingress:', stderrApply);
-    }
+    // if (stderrApply) {
+    //   console.log('error on apply ingress:', stderrApply);
+    // }
   } catch (err) {
     console.error('Error on apply updated ingress yaml file: ', err);
   }
@@ -93,18 +95,25 @@ function run() {
   console.log('Script started. Ready to accept messages.');
 }
 
-redisSubscriber.subscribe('plusAccountCreation');
+// redisSubscriber.subscribe('plusAccountCreation');
 
-redisSubscriber.on('message', async (channel, message) => {
-  if (channel === 'plusAccountCreation') {
-    const splited = message.split(':');
-    const client = splited[0];
-    const environment = splited[1];
-    console.log(`New plus account: ${client} in ${environment}`);
+// redisSubscriber.on('message', async (channel, message) => {
+// if (channel === 'plusAccountCreation') {
+// const splited = message.split(':');
+// const client = splited[0];
+// const environment = splited[1];
 
-    const parsedYAML = await catAndUpdateIngress(client, environment);
-    await applyUpdatedIngress(parsedYAML, environment);
-  }
+const client = 'rangel';
+console.log(`New plus account: ${client} in prod`);
+
+// const parsedYAML = await catAndUpdateIngress(client, environment);
+// await applyUpdatedIngress(parsedYAML, environment);
+
+catAndUpdateIngress(client, 'prod').then(async (parsedYAML) => {
+  await applyUpdatedIngress(parsedYAML, 'prod');
 });
 
-run();
+// }
+// });
+
+// run();

@@ -19,9 +19,16 @@
   },
   "homepage": "https://github.com/pedromihael/redis-pubsub-nodejs#readme",
   "dependencies": {
+    "@aws-cdk/aws-eks": "^1.151.0",
+    "@aws-cdk/core": "^1.151.0",
+    "@aws-cdk/lambda-layer-kubectl": "^1.151.0",
+    "@aws-sdk/client-eks": "^3.58.0",
+    "aws-cdk": "^2.19.0",
+    "aws-cdk-lib": "^2.19.0",
+    "aws-sdk": "^2.1107.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "js-yaml": "^4.1.0",
-    "redis": "^3.1.2"
+    "redis": "^4.0.6"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
