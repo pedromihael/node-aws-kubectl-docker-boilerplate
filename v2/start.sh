@@ -16,4 +16,4 @@ aws configure set default.region $1
 aws eks update-kubeconfig --region sa-east-1 --name qa-cm-eks-master
 
 # Start the script
-node src/index.js
+node src/index.js $4

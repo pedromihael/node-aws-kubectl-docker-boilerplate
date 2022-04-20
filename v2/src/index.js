@@ -1,11 +1,8 @@
 const express = require('express')
-const dotenv = require('dotenv')
 const {createClient, createSub} = require('./redis/')
 
 const { applyUpdatedIngress } = require('./utils/applyUpdatedIngress')
 const { catAndUpdateIngress } = require('./utils/catAndUpdateIngress')
-
-dotenv.config()
 
 const app = express()
 

@@ -4,15 +4,19 @@ FROM node:14-alpine
 # work directory, all files will be placed in this path
 WORKDIR /usr/app
 
-# argument received from --build-arg in `docker build`
+# argument received from -e in `docker run`
+ARG NODE_ENV
+ENV NODE_ENV=${NODE_ENV}
+
+# argument received from -e in `docker run`
 ARG AWS_SECRET_ACCESS_KEY
 ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 
-# argument received from --build-arg in `docker build`
+# argument received from -e in `docker run`
 ARG AWS_ACCESS_KEY
 ENV AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
 
-# argument received from --build-arg in `docker build`
+# argument received from -e in `docker run`
 ARG AWS_DEFAULT_REGION
 ENV AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
 
@@ -42,8 +46,12 @@ RUN apk add python3 py3-pip --no-cache \
     && pip3 install --no-cache-dir awscli \
     && rm -rf /var/cache/apk/*
 
+# add vault to manage secrets
+RUN apk add --no-cache vault libcap \
+    && setcap cap_ipc_lock= /usr/sbin/vault
+
 # give execution permission to script
 RUN chmod +x start.sh
 
 # this command will be executed when run `docker run`
-CMD ./start.sh ${AWS_DEFAULT_REGION} ${AWS_ACCESS_KEY} ${AWS_SECRET_ACCESS_KEY}
+CMD ./start.sh ${AWS_DEFAULT_REGION} ${AWS_ACCESS_KEY} ${AWS_SECRET_ACCESS_KEY} ${NODE_ENV}
